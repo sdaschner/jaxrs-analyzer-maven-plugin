@@ -28,18 +28,18 @@ import java.util.stream.Stream;
  */
 public enum MavenBackend {
 
-    PLAINTEXT("Plain text backend", "rest-resources.txt", PlainTextBackend::new),
+    PLAINTEXT("Plain text backend", "rest-resources.txt"),//, PlainTextBackend::new),
 
-    SWAGGER("Swagger backend", "swagger.json", SwaggerBackend::new);
+    SWAGGER("Swagger backend", "swagger.json");//, SwaggerBackend::new);
 
     private String name;
     private String fileName;
     private Supplier<Backend> backendSupplier;
 
-    MavenBackend(final String name, final String fileName, final Supplier<Backend> backendSupplier) {
+    MavenBackend(final String name, final String fileName) {//, final Supplier<Backend> backendSupplier) {
         this.name = name;
         this.fileName = fileName;
-        this.backendSupplier = backendSupplier;
+//        this.backendSupplier = backendSupplier;
     }
 
     public String getFileName() {
@@ -47,7 +47,9 @@ public enum MavenBackend {
     }
 
     public Backend instantiateBackend() {
-        return backendSupplier.get();
+        // ugly workaround due to bug in the descriptor-mojo functionality which cannot parse lambdas in enum constructors
+        return this == PLAINTEXT ? new PlainTextBackend() : new SwaggerBackend();
+//        return backendSupplier.get();
     }
 
     public String getName() {
