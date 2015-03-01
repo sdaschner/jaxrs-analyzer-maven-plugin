@@ -9,7 +9,7 @@
     <packaging>maven-plugin</packaging>
 
     <description>Maven plugin for the JAX-RS Analyzer.</description>
-    <url>https://github.com/sdaschner/jaxrs-analyzer</url>
+    <url>https://github.com/sdaschner/jaxrs-analyzer-maven-plugin</url>
 
     <licenses>
         <license>
@@ -116,9 +116,16 @@
     </properties>
 
     <scm>
-        <connection>scm:git:git@github.com:sdaschner/jaxrs-analyzer.git</connection>
-        <developerConnection>scm:git:git@github.com:sdaschner/jaxrs-analyzer.git</developerConnection>
-        <url>scm:git:git@github.com:sdaschner/jaxrs-analyzer.git</url>
+        <connection>scm:git:git@github.com:sdaschner/jaxrs-analyzer-maven-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com:sdaschner/jaxrs-analyzer-maven-plugin.git</developerConnection>
+        <url>scm:git:git@github.com:sdaschner/jaxrs-analyzer-maven-plugin.git</url>
         <tag>HEAD</tag>
     </scm>
+
+    <distributionManagement>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 </project>
