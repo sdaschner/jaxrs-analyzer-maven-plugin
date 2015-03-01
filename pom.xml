@@ -29,7 +29,7 @@
         <dependency>
             <groupId>com.sebastian-daschner</groupId>
             <artifactId>jaxrs-analyzer</artifactId>
-            <version>0.1</version>
+            <version>0.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>
