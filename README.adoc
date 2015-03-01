@@ -5,13 +5,11 @@ Maven plugin for the JAX-RS Analyzer.
 
 To enable the plugin, simply add these lines to your pom.xml in the `<plugins>` section.
 
-NOTE: This will work, as soon as the project is on Maven Central. Until then the project (including the JAX-RS Analyzer) has to be built manually.
-
 ----
 <plugin>
     <groupId>com.sebastian-daschner</groupId>
     <artifactId>jaxrs-analyzer-maven-plugin</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1</version>
     <executions>
         <execution>
             <goals>
