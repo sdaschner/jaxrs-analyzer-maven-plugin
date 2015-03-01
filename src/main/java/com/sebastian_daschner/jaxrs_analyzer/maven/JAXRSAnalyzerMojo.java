@@ -20,13 +20,17 @@ import com.sebastian_daschner.jaxrs_analyzer.LogProvider;
 import com.sebastian_daschner.jaxrs_analyzer.analysis.ProjectAnalyzer;
 import com.sebastian_daschner.jaxrs_analyzer.backend.Backend;
 import com.sebastian_daschner.jaxrs_analyzer.model.rest.Resources;
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.project.MavenProject;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -63,6 +67,13 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
      */
     private File buildDirectory;
 
+    /**
+     * @parameter property="project"
+     * @required
+     * @readonly
+     */
+    private MavenProject project;
+
     private File resourcesDirectory;
     private Consumer<String> logger;
 
@@ -83,7 +94,9 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
 
         logger.accept("analyzing JAX-RS resources, using " + mavenBackend.getName());
 
-        final ProjectAnalyzer projectAnalyzer = new ProjectAnalyzer();
+        // add dependency to analysis class path
+        final List<Path> dependencyPaths = project.getDependencyArtifacts().stream().map(Artifact::getFile).map(File::toPath).collect(Collectors.toList());
+        final ProjectAnalyzer projectAnalyzer = new ProjectAnalyzer(dependencyPaths.toArray(new Path[dependencyPaths.size()]));
         final Resources resources = projectAnalyzer.analyze(outputDirectory.toPath());
 
         if (!isEmpty(resources)) {
