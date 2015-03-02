@@ -1,7 +1,7 @@
 = JAX-RS Analyzer Maven Plugin
 Sebastian Daschner
 
-Maven plugin for the JAX-RS Analyzer.
+Maven plugin for the https://github.com/sdaschner/jaxrs-analyzer[JAX-RS Analyzer].
 
 To enable the plugin, simply add these lines to your pom.xml in the `<plugins>` section.
 
