@@ -19,6 +19,7 @@ package com.sebastian_daschner.jaxrs_analyzer.maven;
 import com.sebastian_daschner.jaxrs_analyzer.LogProvider;
 import com.sebastian_daschner.jaxrs_analyzer.analysis.ProjectAnalyzer;
 import com.sebastian_daschner.jaxrs_analyzer.backend.Backend;
+import com.sebastian_daschner.jaxrs_analyzer.model.rest.Project;
 import com.sebastian_daschner.jaxrs_analyzer.model.rest.Resources;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
@@ -54,6 +55,15 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
     private String backend;
 
     /**
+     * The domain where the project will be deployed.
+     *
+     * @parameter default-value="example.com"
+     * @required
+     * @readonly
+     */
+    private String deployedDomain;
+
+    /**
      * @parameter property="project.build.outputDirectory"
      * @required
      * @readonly
@@ -73,7 +83,6 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
      * @readonly
      */
     private MavenProject project;
-
     private File resourcesDirectory;
     private Consumer<String> logger;
 
@@ -105,7 +114,8 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
             if (!resourcesDirectory.exists() && !resourcesDirectory.mkdirs())
                 throw new MojoExecutionException("Could not create directory " + resourcesDirectory);
 
-            writeOutput(mavenBackend, resources);
+            final Project analyzedProject = new Project(project.getName(), project.getVersion(), deployedDomain, resources);
+            writeOutput(mavenBackend, analyzedProject);
         }
     }
 
@@ -118,11 +128,11 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
         return resources.getResources().isEmpty() || resources.getResources().stream().map(resources::getMethods).noneMatch(s -> !s.isEmpty());
     }
 
-    private void writeOutput(final MavenBackend mavenBackend, final Resources resources) throws MojoExecutionException {
+    private void writeOutput(final MavenBackend mavenBackend, final Project project) throws MojoExecutionException {
         final File touch = new File(resourcesDirectory, mavenBackend.getFileName());
         try (final FileWriter writer = new FileWriter(touch)) {
             final Backend backend = mavenBackend.instantiateBackend();
-            writer.write(backend.render(resources));
+            writer.write(backend.render(project));
         } catch (IOException e) {
             throw new MojoExecutionException("Could not create file " + touch, e);
         }

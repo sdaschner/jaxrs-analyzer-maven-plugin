@@ -17,6 +17,7 @@
 package com.sebastian_daschner.jaxrs_analyzer.maven;
 
 import com.sebastian_daschner.jaxrs_analyzer.backend.Backend;
+import com.sebastian_daschner.jaxrs_analyzer.backend.asciidoc.AsciiDocBackend;
 import com.sebastian_daschner.jaxrs_analyzer.backend.plaintext.PlainTextBackend;
 import com.sebastian_daschner.jaxrs_analyzer.backend.swagger.SwaggerBackend;
 
@@ -30,7 +31,9 @@ public enum MavenBackend {
 
     PLAINTEXT("Plain text backend", "rest-resources.txt"),//, PlainTextBackend::new),
 
-    SWAGGER("Swagger backend", "swagger.json");//, SwaggerBackend::new);
+    SWAGGER("Swagger backend", "swagger.json"),//, SwaggerBackend::new);
+
+    ASCIIDOC("AsciiDoc backend", "rest-resources.adoc");//, SwaggerBackend::new);
 
     private String name;
     private String fileName;
@@ -48,7 +51,15 @@ public enum MavenBackend {
 
     public Backend instantiateBackend() {
         // ugly workaround due to bug in the descriptor-mojo functionality which cannot parse lambdas in enum constructors
-        return this == PLAINTEXT ? new PlainTextBackend() : new SwaggerBackend();
+        switch (this) {
+            case SWAGGER:
+                return new SwaggerBackend();
+            case ASCIIDOC:
+                return new AsciiDocBackend();
+            case PLAINTEXT:
+            default:
+                return new PlainTextBackend();
+        }
 //        return backendSupplier.get();
     }
 
