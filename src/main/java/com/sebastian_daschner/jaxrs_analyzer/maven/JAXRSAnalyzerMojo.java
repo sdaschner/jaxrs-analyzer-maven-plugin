@@ -16,23 +16,19 @@
 
 package com.sebastian_daschner.jaxrs_analyzer.maven;
 
+import com.sebastian_daschner.jaxrs_analyzer.JAXRSAnalyzer;
 import com.sebastian_daschner.jaxrs_analyzer.LogProvider;
-import com.sebastian_daschner.jaxrs_analyzer.analysis.ProjectAnalyzer;
-import com.sebastian_daschner.jaxrs_analyzer.backend.Backend;
-import com.sebastian_daschner.jaxrs_analyzer.model.rest.Project;
-import com.sebastian_daschner.jaxrs_analyzer.model.rest.Resources;
+import com.sebastian_daschner.jaxrs_analyzer.backend.BackendType;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.function.Consumer;
+import java.util.Collections;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -84,57 +80,60 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
      */
     private MavenProject project;
     private File resourcesDirectory;
-    private Consumer<String> logger;
 
     @Override
     public void execute() throws MojoExecutionException {
-        injectLoggers();
+        injectMavenLoggers();
 
         // avoid execution if output directory does not exist
         if (!outputDirectory.exists() || !outputDirectory.isDirectory()) {
-            logger.accept("skipping non existing directory " + outputDirectory);
+            LogProvider.info("skipping non existing directory " + outputDirectory);
             return;
         }
 
-        final MavenBackend mavenBackend = MavenBackend.forName(backend);
-        if (mavenBackend == null)
+        final BackendType backendType = BackendType.getByNameIgnoreCase(backend);
+        if (backendType == null)
             throw new MojoExecutionException("Backend " + backend + " not valid! Valid values are: " +
-                    Stream.of(MavenBackend.values()).map(Enum::name).map(String::toLowerCase).collect(Collectors.joining(", ")));
+                    Stream.of(BackendType.values()).map(Enum::name).map(String::toLowerCase).collect(Collectors.joining(", ")));
 
-        logger.accept("analyzing JAX-RS resources, using " + mavenBackend.getName());
+        LogProvider.info("analyzing JAX-RS resources, using " + backendType.getName() + " backend");
 
         // add dependency to analysis class path
-        final List<Path> dependencyPaths = project.getDependencyArtifacts().stream().map(Artifact::getFile).map(File::toPath).collect(Collectors.toList());
-        final ProjectAnalyzer projectAnalyzer = new ProjectAnalyzer(dependencyPaths.toArray(new Path[dependencyPaths.size()]));
-        final Resources resources = projectAnalyzer.analyze(outputDirectory.toPath());
+        final Set<Path> dependencyPaths = project.getDependencyArtifacts().stream().map(Artifact::getFile).map(File::toPath).collect(Collectors.toSet());
+        LogProvider.debug("Dependency paths are: " + dependencyPaths);
 
-        if (!isEmpty(resources)) {
+        final Set<Path> projectPaths = Collections.singleton(outputDirectory.toPath());
+        LogProvider.debug("Project paths are: " + projectPaths);
 
-            resourcesDirectory = Paths.get(buildDirectory.getPath(), "jaxrs-analyzer").toFile();
-            if (!resourcesDirectory.exists() && !resourcesDirectory.mkdirs())
-                throw new MojoExecutionException("Could not create directory " + resourcesDirectory);
+        // create target sub-directory
+        resourcesDirectory = Paths.get(buildDirectory.getPath(), "jaxrs-analyzer").toFile();
+        if (!resourcesDirectory.exists() && !resourcesDirectory.mkdirs())
+            throw new MojoExecutionException("Could not create directory " + resourcesDirectory);
 
-            final Project analyzedProject = new Project(project.getName(), project.getVersion(), deployedDomain, resources);
-            writeOutput(mavenBackend, analyzedProject);
-        }
+        final Path fileLocation = determineFileLocation(backendType);
+
+        // start analysis
+        final long start = System.currentTimeMillis();
+        new JAXRSAnalyzer(projectPaths, dependencyPaths, backendType, project.getName(), project.getVersion(), deployedDomain, fileLocation).analyze();
+        LogProvider.debug("Analysis took " + (System.currentTimeMillis() - start) + " ms");
     }
 
-    private void injectLoggers() {
-        LogProvider.injectLogger(getLog()::info);
-        logger = LogProvider.getLogger();
+    private void injectMavenLoggers() {
+        LogProvider.injectInfoLogger(getLog()::info);
+        LogProvider.injectDebugLogger(getLog()::debug);
+        LogProvider.injectErrorLogger(getLog()::error);
     }
 
-    private boolean isEmpty(final Resources resources) {
-        return resources.getResources().isEmpty() || resources.getResources().stream().map(resources::getMethods).noneMatch(s -> !s.isEmpty());
-    }
-
-    private void writeOutput(final MavenBackend mavenBackend, final Project project) throws MojoExecutionException {
-        final File touch = new File(resourcesDirectory, mavenBackend.getFileName());
-        try (final FileWriter writer = new FileWriter(touch)) {
-            final Backend backend = mavenBackend.instantiateBackend();
-            writer.write(backend.render(project));
-        } catch (IOException e) {
-            throw new MojoExecutionException("Could not create file " + touch, e);
+    private Path determineFileLocation(final BackendType backendType) {
+        switch (backendType) {
+            case PLAINTEXT:
+                return resourcesDirectory.toPath().resolve("rest-resources.txt");
+            case ASCIIDOC:
+                return resourcesDirectory.toPath().resolve("rest-resources.adoc");
+            case SWAGGER:
+                return resourcesDirectory.toPath().resolve("swagger.json");
+            default:
+                throw new IllegalArgumentException("Unknown backend type " + backendType);
         }
     }
 
