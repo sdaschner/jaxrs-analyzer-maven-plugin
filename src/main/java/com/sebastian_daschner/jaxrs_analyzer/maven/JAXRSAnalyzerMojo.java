@@ -28,6 +28,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -99,7 +100,8 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
         LogProvider.info("analyzing JAX-RS resources, using " + backendType.getName() + " backend");
 
         // add dependency to analysis class path
-        final Set<Path> dependencyPaths = project.getDependencyArtifacts().stream().map(Artifact::getFile).map(File::toPath).collect(Collectors.toSet());
+        final Set<Path> dependencyPaths = project.getDependencyArtifacts().stream().map(Artifact::getFile).filter(Objects::nonNull).map(File::toPath)
+                .collect(Collectors.toSet());
         LogProvider.debug("Dependency paths are: " + dependencyPaths);
 
         final Set<Path> projectPaths = Collections.singleton(outputDirectory.toPath());
