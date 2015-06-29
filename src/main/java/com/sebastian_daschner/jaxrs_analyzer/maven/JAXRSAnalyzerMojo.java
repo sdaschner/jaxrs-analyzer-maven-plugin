@@ -99,9 +99,8 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
 
         LogProvider.info("analyzing JAX-RS resources, using " + backendType.getName() + " backend");
 
-        // add dependency to analysis class path
-        final Set<Path> dependencyPaths = project.getDependencyArtifacts().stream().map(Artifact::getFile).filter(Objects::nonNull).map(File::toPath)
-                .collect(Collectors.toSet());
+        // add dependencies to analysis class path
+        final Set<Path> dependencyPaths = getDependencies();
         LogProvider.debug("Dependency paths are: " + dependencyPaths);
 
         final Set<Path> projectPaths = Collections.singleton(outputDirectory.toPath());
@@ -124,6 +123,17 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
         LogProvider.injectInfoLogger(getLog()::info);
         LogProvider.injectDebugLogger(getLog()::debug);
         LogProvider.injectErrorLogger(getLog()::error);
+    }
+
+    private Set<Path> getDependencies() {
+        project.setArtifactFilter(a -> true);
+
+        Set<Artifact> artifacts = project.getArtifacts();
+        if (artifacts.isEmpty()) {
+            artifacts = project.getDependencyArtifacts();
+        }
+
+        return artifacts.stream().map(Artifact::getFile).filter(Objects::nonNull).map(File::toPath).collect(Collectors.toSet());
     }
 
     private Path determineFileLocation(final BackendType backendType) {
