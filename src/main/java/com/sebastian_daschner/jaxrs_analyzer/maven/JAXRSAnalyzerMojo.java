@@ -23,11 +23,19 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.resolution.ArtifactRequest;
+import org.eclipse.aether.resolution.ArtifactResolutionException;
+import org.eclipse.aether.resolution.ArtifactResult;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -82,6 +90,31 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
     private MavenProject project;
     private File resourcesDirectory;
 
+    /**
+     * The entry point to Aether.
+     *
+     * @component
+     */
+    private RepositorySystem repoSystem;
+
+    /**
+     * The current repository/network configuration of Maven.
+     *
+     * @parameter property="repositorySystemSession"
+     * @required
+     * @readonly
+     */
+    private RepositorySystemSession repoSession;
+
+    /**
+     * The project's remote repositories to use for the resolution of plugins and their dependencies.
+     *
+     * @parameter property="project.remotePluginRepositories"
+     * @required
+     * @readonly
+     */
+    private List<RemoteRepository> remoteRepos;
+
     @Override
     public void execute() throws MojoExecutionException {
         injectMavenLoggers();
@@ -125,7 +158,7 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
         LogProvider.injectErrorLogger(getLog()::error);
     }
 
-    private Set<Path> getDependencies() {
+    private Set<Path> getDependencies() throws MojoExecutionException {
         project.setArtifactFilter(a -> true);
 
         Set<Artifact> artifacts = project.getArtifacts();
@@ -133,7 +166,30 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
             artifacts = project.getDependencyArtifacts();
         }
 
-        return artifacts.stream().map(Artifact::getFile).filter(Objects::nonNull).map(File::toPath).collect(Collectors.toSet());
+        final Set<Path> dependencies = artifacts.stream().map(Artifact::getFile).filter(Objects::nonNull).map(File::toPath).collect(Collectors.toSet());
+
+        // Java EE 7 API is needed internally
+        dependencies.add(fetchJavaEEAPI().toPath());
+        return dependencies;
+    }
+
+    private File fetchJavaEEAPI() throws MojoExecutionException {
+        ArtifactRequest request = new ArtifactRequest();
+        final DefaultArtifact artifact = new DefaultArtifact("javax:javaee-api:7.0");
+        request.setArtifact(artifact);
+        request.setRepositories(remoteRepos);
+
+        LogProvider.debug("Resolving artifact " + artifact + " from " + remoteRepos);
+
+        ArtifactResult result;
+        try {
+            result = repoSystem.resolveArtifact(repoSession, request);
+        } catch (ArtifactResolutionException e) {
+            throw new MojoExecutionException(e.getMessage(), e);
+        }
+
+        LogProvider.debug("Resolved artifact " + artifact + " to " + result.getArtifact().getFile() + " from " + result.getRepository());
+        return result.getArtifact().getFile();
     }
 
     private Path determineFileLocation(final BackendType backendType) {
