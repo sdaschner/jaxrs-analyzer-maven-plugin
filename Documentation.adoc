@@ -1,7 +1,7 @@
 = JAX-RS Analyzer Maven Plugin
 Sebastian Daschner
 
-Maven plugin for the https://github.com/sdaschner/jaxrs-analyzer[JAX-RS Analyzer].
+The JAX-RS Analyzer Maven plugin activates the https://github.com/sdaschner/jaxrs-analyzer[JAX-RS Analyzer] for Maven builds.
 
 To enable the plugin, simply add these lines to your pom.xml in the `<plugins>` section.
 
@@ -28,4 +28,18 @@ To enable the plugin, simply add these lines to your pom.xml in the `<plugins>` 
 
 After building your project, the documentation resides under 'target/jaxrs-analyzer/'.
 
-Please see the Maven plugin https://github.com/sdaschner/jaxrs-analyzer-maven-plugin/blob/master/Documentation.adoc[documentation].
+== Configuration
+
+=== Backend
+
+The `backend` parameter specifies the output format of the analysis.
+The available formats are Plaintext, AsciiDoc and Swagger.
+
+For further use of the created formats see the https://github.com/sdaschner/jaxrs-analyzer/blob/master/Documentation.adoc[JAX-RS Analyzer documentation].
+
+=== Deployed domain
+With `deployedDomain` the user may specify the URL which will contain the REST API later on.
+Tools like Swagger make use of this information (and offer possibilities to send calls directly, etc.).
+
+== Contributing
+Feedback, bug reports and ideas for improvement are very welcome! Feel free to fork, comment, file an issue, etc. ;-)
