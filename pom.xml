@@ -1,10 +1,9 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.sebastian-daschner</groupId>
     <artifactId>jaxrs-analyzer-maven-plugin</artifactId>
-    <version>0.8-SNAPSHOT</version>
+    <version>0.8</version>
     <name>JAX-RS Analyzer Maven Plugin</name>
     <packaging>maven-plugin</packaging>
 
@@ -30,7 +29,7 @@
         <dependency>
             <groupId>com.sebastian-daschner</groupId>
             <artifactId>jaxrs-analyzer</artifactId>
-            <version>0.8-SNAPSHOT</version>
+            <version>0.8</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.aether</groupId>
@@ -126,7 +125,7 @@
         <connection>scm:git:git@github.com:sdaschner/jaxrs-analyzer-maven-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:sdaschner/jaxrs-analyzer-maven-plugin.git</developerConnection>
         <url>scm:git:git@github.com:sdaschner/jaxrs-analyzer-maven-plugin.git</url>
-        <tag>HEAD</tag>
+        <tag>v0.8</tag>
     </scm>
 
     <distributionManagement>
