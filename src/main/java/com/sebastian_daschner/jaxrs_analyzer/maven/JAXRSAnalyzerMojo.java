@@ -53,18 +53,14 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
     /**
      * The chosen backend format. Defaults to plaintext.
      *
-     * @parameter default-value="plaintext"
-     * @required
-     * @readonly
+     * @parameter default-value="plaintext" property="jaxrs-analyzer.backend"
      */
     private String backend;
 
     /**
      * The domain where the project will be deployed.
      *
-     * @parameter default-value="example.com"
-     * @required
-     * @readonly
+     * @parameter default-value="example.com" property="jaxrs-analyzer.deployedDomain"
      */
     private String deployedDomain;
 
@@ -88,7 +84,6 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
      * @readonly
      */
     private MavenProject project;
-    private File resourcesDirectory;
 
     /**
      * The entry point to Aether.
@@ -114,6 +109,8 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
      * @readonly
      */
     private List<RemoteRepository> remoteRepos;
+
+    private File resourcesDirectory;
 
     @Override
     public void execute() throws MojoExecutionException {
