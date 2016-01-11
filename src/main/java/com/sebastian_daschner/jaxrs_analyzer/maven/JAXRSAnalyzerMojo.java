@@ -65,6 +65,20 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
     private String deployedDomain;
 
     /**
+     * Specifies if Swagger tags should be generated.
+     *
+     * @parameter default-value="false" property="jaxrs-analyzer.renderSwaggerTags"
+     */
+    private Boolean renderSwaggerTags;
+
+    /**
+     * The number at which path position the Swagger tags should be extracted.
+     *
+     * @parameter default-value="0" property="jaxrs-analyzer.swaggerTagsPathOffset"
+     */
+    private Integer swaggerTagsPathOffset;
+
+    /**
      * @parameter property="project.build.outputDirectory"
      * @required
      * @readonly
@@ -145,7 +159,8 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
 
         // start analysis
         final long start = System.currentTimeMillis();
-        new JAXRSAnalyzer(projectPaths, dependencyPaths, backendType, project.getName(), project.getVersion(), deployedDomain, fileLocation).analyze();
+        new JAXRSAnalyzer(projectPaths, dependencyPaths, backendType, project.getName(), project.getVersion(), deployedDomain, fileLocation,
+            renderSwaggerTags, swaggerTagsPathOffset).analyze();
         LogProvider.debug("Analysis took " + (System.currentTimeMillis() - start) + " ms");
     }
 
