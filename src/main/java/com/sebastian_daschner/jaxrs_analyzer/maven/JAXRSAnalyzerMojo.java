@@ -225,7 +225,8 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
             artifacts = project.getDependencyArtifacts();
         }
 
-        final Set<Path> dependencies = artifacts.stream().map(Artifact::getFile).filter(Objects::nonNull).map(File::toPath).collect(Collectors.toSet());
+        final Set<Path> dependencies = artifacts.stream().filter(a -> !a.getScope().equals(Artifact.SCOPE_TEST)).map(Artifact::getFile)
+                .filter(Objects::nonNull).map(File::toPath).collect(Collectors.toSet());
 
         // Java EE 7 API is needed internally
         dependencies.add(fetchJavaEEAPI().toPath());

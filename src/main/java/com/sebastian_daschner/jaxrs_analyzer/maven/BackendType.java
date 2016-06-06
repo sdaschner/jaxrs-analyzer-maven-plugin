@@ -5,7 +5,7 @@ package com.sebastian_daschner.jaxrs_analyzer.maven;
  *
  * @author Sebastian Daschner
  */
-public enum BackendType {
+enum BackendType {
 
     PLAINTEXT("rest-resources.txt"),
 
