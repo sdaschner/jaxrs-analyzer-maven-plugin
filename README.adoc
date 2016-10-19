@@ -9,16 +9,14 @@ To enable the plugin, simply add these lines to your pom.xml in the `<plugins>` 
 <plugin>
     <groupId>com.sebastian-daschner</groupId>
     <artifactId>jaxrs-analyzer-maven-plugin</artifactId>
-    <version>0.9</version>
+    <version>0.10</version>
     <executions>
         <execution>
             <goals>
                 <goal>analyze-jaxrs</goal>
             </goals>
             <configuration>
-                <!-- Available backends are plaintext (default), swagger and asciidoc -->
-                <backend>plaintext</backend>
-                <!-- Domain of the deployed project, defaults to example.com -->
+                <backend>swagger</backend>
                 <deployedDomain>example.com</deployedDomain>
             </configuration>
         </execution>
@@ -28,4 +26,4 @@ To enable the plugin, simply add these lines to your pom.xml in the `<plugins>` 
 
 After building your project, the documentation resides under 'target/jaxrs-analyzer/'.
 
-Please see the Maven plugin https://github.com/sdaschner/jaxrs-analyzer-maven-plugin/blob/master/Documentation.adoc[documentation].
+For all configuration options please see the Maven plugin https://github.com/sdaschner/jaxrs-analyzer-maven-plugin/blob/master/Documentation.adoc[documentation].

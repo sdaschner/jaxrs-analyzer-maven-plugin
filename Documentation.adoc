@@ -9,7 +9,7 @@ To enable the plugin, simply add these lines to your pom.xml in the `<plugins>` 
 <plugin>
     <groupId>com.sebastian-daschner</groupId>
     <artifactId>jaxrs-analyzer-maven-plugin</artifactId>
-    <version>0.9</version>
+    <version>0.10</version>
     <executions>
         <execution>
             <goals>
@@ -20,6 +20,12 @@ To enable the plugin, simply add these lines to your pom.xml in the `<plugins>` 
                 <backend>plaintext</backend>
                 <!-- Domain of the deployed project, defaults to example.com -->
                 <deployedDomain>example.com</deployedDomain>
+                <!-- Comma separated list of Swagger schemes (only for if backend is swagger, defaults to http) -->
+                <swaggerSchemes>https,http</swaggerSchemes>
+                <!-- Enables rendering of Swagger tags (defaults to false -> default tag will be used) -->
+                <renderSwaggerTags>true</renderSwaggerTags>
+                <!-- The number at which path position the Swagger tags will be extracted (defaults to 0) -->
+                <swaggerTagsPathOffset>1</swaggerTagsPathOffset>
             </configuration>
         </execution>
     </executions>
@@ -39,6 +45,12 @@ For further use of the created formats see the https://github.com/sdaschner/jaxr
 === Deployed domain
 With `deployedDomain` the user may specify the URL which will contain the REST API later on.
 Tools like Swagger make use of this information (and offer possibilities to send calls directly, etc.).
+
+=== Swagger options
+
+* `swaggerSchemes` The comma separated list of Swagger schemes: `http` (default), `https`, `ws`, `wss`
+* `renderSwaggerTags` Enables rendering of Swagger tags (defaults to false, then the default tag will be used)
+* `swaggerTagsPathOffset` The number at which path position the Swagger tags will be extracted (defaults to 0)
 
 == Contributing
 Feedback, bug reports and ideas for improvement are very welcome! Feel free to fork, comment, file an issue, etc. ;-)
