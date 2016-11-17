@@ -45,6 +45,7 @@ import java.util.stream.Stream;
  * @author Sebastian Daschner
  * @goal analyze-jaxrs
  * @phase process-classes
+ * @requiresDependencyResolution compile
  */
 public class JAXRSAnalyzerMojo extends AbstractMojo {
 
