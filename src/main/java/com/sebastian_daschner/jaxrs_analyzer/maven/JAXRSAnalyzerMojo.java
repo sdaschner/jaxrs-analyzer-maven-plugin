@@ -35,9 +35,14 @@ import org.eclipse.aether.resolution.ArtifactResult;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.util.Collections.singleton;
 
 /**
  * Maven goal which analyzes JAX-RS resources.
@@ -90,6 +95,13 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
      * @readonly
      */
     private File outputDirectory;
+
+    /**
+     * @parameter property="project.build.sourceDirectory"
+     * @required
+     * @readonly
+     */
+    private File sourceDirectory;
 
     /**
      * @parameter property="project.build.directory"
@@ -148,11 +160,14 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
         LogProvider.info("analyzing JAX-RS resources, using " + backend.getName() + " backend");
 
         // add dependencies to analysis class path
-        final Set<Path> dependencyPaths = getDependencies();
-        LogProvider.debug("Dependency paths are: " + dependencyPaths);
+        final Set<Path> classPaths = getDependencies();
+        LogProvider.debug("Dependency class paths are: " + classPaths);
 
-        final Set<Path> projectPaths = Collections.singleton(outputDirectory.toPath());
+        final Set<Path> projectPaths = singleton(outputDirectory.toPath());
         LogProvider.debug("Project paths are: " + projectPaths);
+
+        final Set<Path> sourcePaths = singleton(sourceDirectory.toPath());
+        LogProvider.debug("Source paths are: " + sourcePaths);
 
         // create target sub-directory
         resourcesDirectory = Paths.get(buildDirectory.getPath(), "jaxrs-analyzer").toFile();
@@ -163,7 +178,7 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
 
         // start analysis
         final long start = System.currentTimeMillis();
-        new JAXRSAnalyzer(projectPaths, dependencyPaths, project.getName(), project.getVersion(), backend, fileLocation).analyze();
+        new JAXRSAnalyzer(projectPaths, sourcePaths, classPaths, project.getName(), project.getVersion(), backend, fileLocation).analyze();
         LogProvider.debug("Analysis took " + (System.currentTimeMillis() - start) + " ms");
     }
 
