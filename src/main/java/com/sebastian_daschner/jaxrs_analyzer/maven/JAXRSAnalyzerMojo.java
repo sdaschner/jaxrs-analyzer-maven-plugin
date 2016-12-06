@@ -19,7 +19,7 @@ package com.sebastian_daschner.jaxrs_analyzer.maven;
 import com.sebastian_daschner.jaxrs_analyzer.JAXRSAnalyzer;
 import com.sebastian_daschner.jaxrs_analyzer.LogProvider;
 import com.sebastian_daschner.jaxrs_analyzer.backend.Backend;
-import com.sebastian_daschner.jaxrs_analyzer.backend.swagger.SwaggerScheme;
+import com.sebastian_daschner.jaxrs_analyzer.backend.swagger.SwaggerOptions;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -35,14 +35,12 @@ import org.eclipse.aether.resolution.ArtifactResult;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Collections.singleton;
+import static java.util.stream.Collectors.joining;
 
 /**
  * Maven goal which analyzes JAX-RS resources.
@@ -142,8 +140,6 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
      */
     private List<RemoteRepository> remoteRepos;
 
-    private File resourcesDirectory;
-
     @Override
     public void execute() throws MojoExecutionException {
         injectMavenLoggers();
@@ -170,7 +166,7 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
         LogProvider.debug("Source paths are: " + sourcePaths);
 
         // create target sub-directory
-        resourcesDirectory = Paths.get(buildDirectory.getPath(), "jaxrs-analyzer").toFile();
+        final File resourcesDirectory = Paths.get(buildDirectory.getPath(), "jaxrs-analyzer").toFile();
         if (!resourcesDirectory.exists() && !resourcesDirectory.mkdirs())
             throw new MojoExecutionException("Could not create directory " + resourcesDirectory);
 
@@ -192,39 +188,21 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
                 return BackendType.SWAGGER;
             default:
                 throw new IllegalArgumentException("Backend " + backend + " not valid! Valid values are: " +
-                        Stream.of(BackendType.values()).map(Enum::name).map(String::toLowerCase).collect(Collectors.joining(", ")));
+                        Stream.of(BackendType.values()).map(Enum::name).map(String::toLowerCase).collect(joining(", ")));
         }
     }
 
     private Backend configureBackend(final BackendType backendType) throws IllegalArgumentException {
-        final Set<SwaggerScheme> schemes = Stream.of(swaggerSchemes).map(this::getSwaggerScheme).collect(() -> EnumSet.noneOf(SwaggerScheme.class), Set::add, Set::addAll);
+        final Map<String, String> config = new HashMap<>();
+        config.put(SwaggerOptions.SWAGGER_SCHEMES, Stream.of(swaggerSchemes).collect(joining(",")));
+        config.put(SwaggerOptions.DOMAIN, deployedDomain);
+        config.put(SwaggerOptions.RENDER_SWAGGER_TAGS, renderSwaggerTags.toString());
+        config.put(SwaggerOptions.SWAGGER_TAGS_PATH_OFFSET, swaggerTagsPathOffset.toString());
 
-        switch (backendType) {
-            case PLAINTEXT:
-                return Backend.plainText().build();
-            case ASCIIDOC:
-                return Backend.asciiDoc().build();
-            case SWAGGER:
-                return Backend.swagger().domain(deployedDomain).schemes(schemes).renderTags(renderSwaggerTags, swaggerTagsPathOffset).build();
-            default:
-                throw new IllegalArgumentException("Unknown backend type " + backendType);
-        }
-    }
+        final Backend backend = JAXRSAnalyzer.constructBackend(backendType.name());
+        backend.configure(config);
 
-    private SwaggerScheme getSwaggerScheme(final String scheme) {
-        switch (scheme.toLowerCase()) {
-            case "http":
-                return SwaggerScheme.HTTP;
-            case "https":
-                return SwaggerScheme.HTTPS;
-            case "ws":
-                return SwaggerScheme.WS;
-            case "wss":
-                return SwaggerScheme.WSS;
-            default:
-                throw new IllegalArgumentException("Swagger scheme " + scheme + " not valid! Valid values are: " +
-                        Stream.of(SwaggerScheme.values()).map(Enum::name).map(String::toLowerCase).collect(Collectors.joining(", ")));
-        }
+        return backend;
     }
 
     private void injectMavenLoggers() {
