@@ -222,14 +222,17 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
         final Set<Path> dependencies = artifacts.stream().filter(a -> !a.getScope().equals(Artifact.SCOPE_TEST)).map(Artifact::getFile)
                 .filter(Objects::nonNull).map(File::toPath).collect(Collectors.toSet());
 
-        // Java EE 7 API is needed internally
-        dependencies.add(fetchJavaEEAPI().toPath());
+        final String analyzerVersion = project.getPluginArtifactMap().get("com.sebastian-daschner:jaxrs-analyzer-maven-plugin").getVersion();
+
+        // Java EE 7 and JAX-RS Analyzer API is needed internally
+        dependencies.add(fetchDependency("javax:javaee-api:7.0"));
+        dependencies.add(fetchDependency("com.sebastian-daschner:jaxrs-analyzer:" + analyzerVersion));
         return dependencies;
     }
 
-    private File fetchJavaEEAPI() throws MojoExecutionException {
+    private Path fetchDependency(final String artifactIdentifier) throws MojoExecutionException {
         ArtifactRequest request = new ArtifactRequest();
-        final DefaultArtifact artifact = new DefaultArtifact("javax:javaee-api:7.0");
+        final DefaultArtifact artifact = new DefaultArtifact(artifactIdentifier);
         request.setArtifact(artifact);
         request.setRepositories(remoteRepos);
 
@@ -243,7 +246,7 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
         }
 
         LogProvider.debug("Resolved artifact " + artifact + " to " + result.getArtifact().getFile() + " from " + result.getRepository());
-        return result.getArtifact().getFile();
+        return result.getArtifact().getFile().toPath();
     }
 
 }
