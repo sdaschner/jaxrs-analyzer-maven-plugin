@@ -140,6 +140,14 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
      */
     private List<RemoteRepository> remoteRepos;
 
+
+    /**
+     * Path, relative to outputDir, to generate resources
+     *
+     * @parameter default-value="jaxrs-analyzer" property="jaxrs-analyzer.resourcesDir"
+     */
+    private String resourcesDir;
+
     @Override
     public void execute() throws MojoExecutionException {
         injectMavenLoggers();
@@ -166,11 +174,13 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
         LogProvider.debug("Source paths are: " + sourcePaths);
 
         // create target sub-directory
-        final File resourcesDirectory = Paths.get(buildDirectory.getPath(), "jaxrs-analyzer").toFile();
+        final File resourcesDirectory = Paths.get(buildDirectory.getPath(), resourcesDir).toFile();
         if (!resourcesDirectory.exists() && !resourcesDirectory.mkdirs())
             throw new MojoExecutionException("Could not create directory " + resourcesDirectory);
 
         final Path fileLocation = resourcesDirectory.toPath().resolve(backendType.getFileLocation());
+
+        LogProvider.info("Generating resources at " + fileLocation.toAbsolutePath());
 
         // start analysis
         final long start = System.currentTimeMillis();
