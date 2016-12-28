@@ -62,7 +62,7 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
     /**
      * The domain where the project will be deployed.
      *
-     * @parameter default-value="example.com" property="jaxrs-analyzer.deployedDomain"
+     * @parameter default-value="" property="jaxrs-analyzer.deployedDomain"
      */
     private String deployedDomain;
 

@@ -18,7 +18,7 @@ To enable the plugin, simply add these lines to your pom.xml in the `<plugins>` 
             <configuration>
                 <!-- Available backends are plaintext (default), swagger and asciidoc -->
                 <backend>plaintext</backend>
-                <!-- Domain of the deployed project, defaults to example.com -->
+                <!-- Domain of the deployed project, defaults to "" -->
                 <deployedDomain>example.com</deployedDomain>
                 <!-- Comma separated list of Swagger schemes (only for if backend is swagger, defaults to http) -->
                 <swaggerSchemes>https,http</swaggerSchemes>
@@ -26,6 +26,8 @@ To enable the plugin, simply add these lines to your pom.xml in the `<plugins>` 
                 <renderSwaggerTags>true</renderSwaggerTags>
                 <!-- The number at which path position the Swagger tags will be extracted (defaults to 0) -->
                 <swaggerTagsPathOffset>1</swaggerTagsPathOffset>
+                <!-- Directory (relative to buildDir) where resources will be generated (defaults to jaxrs-analyzer) -->
+                <resourcesDir>jaxrs-analyzer</resourcesDir>
             </configuration>
         </execution>
     </executions>
