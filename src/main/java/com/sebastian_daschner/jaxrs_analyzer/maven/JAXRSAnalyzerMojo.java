@@ -173,6 +173,8 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
         final Set<Path> sourcePaths = singleton(sourceDirectory.toPath());
         LogProvider.debug("Source paths are: " + sourcePaths);
 
+        handleSourceEncoding();
+
         // create target sub-directory
         final File resourcesDirectory = Paths.get(buildDirectory.getPath(), resourcesDir).toFile();
         if (!resourcesDirectory.exists() && !resourcesDirectory.mkdirs())
@@ -186,6 +188,12 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
         final long start = System.currentTimeMillis();
         new JAXRSAnalyzer(projectPaths, sourcePaths, classPaths, project.getName(), project.getVersion(), backend, fileLocation).analyze();
         LogProvider.debug("Analysis took " + (System.currentTimeMillis() - start) + " ms");
+    }
+
+    private void handleSourceEncoding() {
+        final String encoding = project.getProperties().getProperty("project.build.sourceEncoding");
+        if (encoding != null && System.getProperty("project.build.sourceEncoding") == null)
+            System.setProperty("project.build.sourceEncoding", encoding);
     }
 
     private BackendType getBackendType() {
