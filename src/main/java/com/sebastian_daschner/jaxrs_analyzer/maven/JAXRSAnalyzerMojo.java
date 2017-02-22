@@ -109,6 +109,11 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
     private File buildDirectory;
 
     /**
+     * @parameter property="project.build.sourceEncoding"
+     */
+    private String encoding;
+
+    /**
      * @parameter property="project"
      * @required
      * @readonly
@@ -191,7 +196,6 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
     }
 
     private void handleSourceEncoding() {
-        final String encoding = project.getProperties().getProperty("project.build.sourceEncoding");
         if (encoding != null && System.getProperty("project.build.sourceEncoding") == null)
             System.setProperty("project.build.sourceEncoding", encoding);
     }
