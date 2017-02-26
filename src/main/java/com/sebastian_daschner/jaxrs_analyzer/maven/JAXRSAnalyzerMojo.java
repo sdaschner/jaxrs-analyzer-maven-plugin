@@ -47,7 +47,7 @@ import static java.util.stream.Collectors.joining;
  *
  * @author Sebastian Daschner
  * @goal analyze-jaxrs
- * @phase process-classes
+ * @phase process-test-classes
  * @requiresDependencyResolution compile
  */
 public class JAXRSAnalyzerMojo extends AbstractMojo {
