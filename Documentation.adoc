@@ -9,7 +9,7 @@ To enable the plugin, simply add these lines to your pom.xml in the `<plugins>` 
 <plugin>
     <groupId>com.sebastian-daschner</groupId>
     <artifactId>jaxrs-analyzer-maven-plugin</artifactId>
-    <version>0.13</version>
+    <version>0.14</version>
     <executions>
         <execution>
             <goals>
