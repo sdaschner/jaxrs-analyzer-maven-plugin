@@ -60,6 +60,13 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
     private String backend;
 
     /**
+     * For plaintext and asciidoc backends, should they try to prettify json representation of requests/responses.
+     *
+     * @parameter default-value="true" property="jaxrs-analyzer.prettify"
+     */
+    private boolean prettify;
+
+    /**
      * The domain where the project will be deployed.
      *
      * @parameter default-value="" property="jaxrs-analyzer.deployedDomain"
@@ -191,7 +198,7 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
 
         // start analysis
         final long start = System.currentTimeMillis();
-        new JAXRSAnalyzer(projectPaths, sourcePaths, classPaths, project.getName(), project.getVersion(), backend, fileLocation).analyze();
+        new JAXRSAnalyzer(projectPaths, sourcePaths, classPaths, project.getName(), project.getVersion(), backend, fileLocation, prettify).analyze();
         LogProvider.debug("Analysis took " + (System.currentTimeMillis() - start) + " ms");
     }
 
