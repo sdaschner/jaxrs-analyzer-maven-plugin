@@ -19,6 +19,7 @@ package com.sebastian_daschner.jaxrs_analyzer.maven;
 import com.sebastian_daschner.jaxrs_analyzer.JAXRSAnalyzer;
 import com.sebastian_daschner.jaxrs_analyzer.LogProvider;
 import com.sebastian_daschner.jaxrs_analyzer.backend.Backend;
+import com.sebastian_daschner.jaxrs_analyzer.backend.StringBackend;
 import com.sebastian_daschner.jaxrs_analyzer.backend.swagger.SwaggerOptions;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
@@ -60,13 +61,6 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
     private String backend;
 
     /**
-     * For plaintext and asciidoc backends, should they try to prettify json representation of requests/responses.
-     *
-     * @parameter default-value="true" property="jaxrs-analyzer.prettify"
-     */
-    private boolean prettify;
-
-    /**
      * The domain where the project will be deployed.
      *
      * @parameter default-value="" property="jaxrs-analyzer.deployedDomain"
@@ -93,6 +87,13 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
      * @parameter default-value="0" property="jaxrs-analyzer.swaggerTagsPathOffset"
      */
     private Integer swaggerTagsPathOffset;
+
+    /**
+     * For plaintext and asciidoc backends, should they try to prettify inline JSON representation of requests/responses.
+     *
+     * @parameter default-value="true" property="jaxrs-analyzer.inlinePrettify"
+     */
+    private Boolean inlinePrettify;
 
     /**
      * @parameter property="project.build.outputDirectory"
@@ -198,7 +199,7 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
 
         // start analysis
         final long start = System.currentTimeMillis();
-        new JAXRSAnalyzer(projectPaths, sourcePaths, classPaths, project.getName(), project.getVersion(), backend, fileLocation, prettify).analyze();
+        new JAXRSAnalyzer(projectPaths, sourcePaths, classPaths, project.getName(), project.getVersion(), backend, fileLocation).analyze();
         LogProvider.debug("Analysis took " + (System.currentTimeMillis() - start) + " ms");
     }
 
@@ -227,6 +228,7 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
         config.put(SwaggerOptions.DOMAIN, deployedDomain);
         config.put(SwaggerOptions.RENDER_SWAGGER_TAGS, renderSwaggerTags.toString());
         config.put(SwaggerOptions.SWAGGER_TAGS_PATH_OFFSET, swaggerTagsPathOffset.toString());
+        config.put(StringBackend.INLINE_PRETTIFY, inlinePrettify.toString());
 
         final Backend backend = JAXRSAnalyzer.constructBackend(backendType.name());
         backend.configure(config);
