@@ -18,6 +18,7 @@ To enable the plugin, simply add these lines to your pom.xml in the `<plugins>` 
             <configuration>
                 <!-- Available backends are plaintext (default), swagger and asciidoc -->
                 <backend>plaintext</backend>
+                <ignoredBoundaryClasses>com.domain.foo.boundary.internal.Employees,com.domain.foo.boundary.internal.Salary</ignoredBoundaryClasses>
                 <!-- Domain of the deployed project, defaults to "" -->
                 <deployedDomain>example.com</deployedDomain>
                 <!-- Comma separated list of Swagger schemes (only for if backend is swagger, defaults to http) -->
@@ -43,6 +44,9 @@ The `backend` parameter specifies the output format of the analysis.
 The available formats are Plaintext, AsciiDoc and Swagger.
 
 For further use of the created formats see the https://github.com/sdaschner/jaxrs-analyzer/blob/master/Documentation.adoc[JAX-RS Analyzer documentation].
+
+=== Ignored boundary classes
+The `ignoredBoundaryClasses` parameter is used to specifies a blacklist of classes. Here you can specify your boundary classes which are present at the API but should not be documented anyway.
 
 === Deployed domain
 With `deployedDomain` the user may specify the URL which will contain the REST API later on.
