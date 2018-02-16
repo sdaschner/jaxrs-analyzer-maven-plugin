@@ -234,6 +234,8 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
                 return BackendType.PLAINTEXT;
             case "asciidoc":
                 return BackendType.ASCIIDOC;
+            case "markdown":
+                return BackendType.MARKDOWN;
             case "swagger":
                 return BackendType.SWAGGER;
             default:

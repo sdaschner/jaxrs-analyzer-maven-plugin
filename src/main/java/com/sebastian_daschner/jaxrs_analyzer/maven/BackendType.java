@@ -11,6 +11,8 @@ enum BackendType {
 
     ASCIIDOC("rest-resources.adoc"),
 
+    MARKDOWN("rest-resources.md"),
+
     SWAGGER("swagger.json");
 
     private final String fileLocation;
