@@ -16,11 +16,19 @@
 
 package com.sebastian_daschner.jaxrs_analyzer.maven;
 
-import com.sebastian_daschner.jaxrs_analyzer.JAXRSAnalyzer;
-import com.sebastian_daschner.jaxrs_analyzer.LogProvider;
-import com.sebastian_daschner.jaxrs_analyzer.backend.Backend;
-import com.sebastian_daschner.jaxrs_analyzer.backend.StringBackend;
-import com.sebastian_daschner.jaxrs_analyzer.backend.swagger.SwaggerOptions;
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -33,12 +41,11 @@ import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
 
-import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import com.sebastian_daschner.jaxrs_analyzer.JAXRSAnalyzer;
+import com.sebastian_daschner.jaxrs_analyzer.LogProvider;
+import com.sebastian_daschner.jaxrs_analyzer.backend.Backend;
+import com.sebastian_daschner.jaxrs_analyzer.backend.StringBackend;
+import com.sebastian_daschner.jaxrs_analyzer.backend.swagger.SwaggerOptions;
 
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.joining;
@@ -161,6 +168,14 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
      */
     private String resourcesDir;
 
+
+    /**
+     * Boundary resource classes which should ignored by the analyzer. (full qualified class names, separated by comma)
+     *
+     * @parameter default-value="" property="jaxrs-analyzer.ignoredBoundaryClasses"
+     */
+    private String[] ignoredBoundaryClasses;
+
     @Override
     public void execute() throws MojoExecutionException {
         injectMavenLoggers();
@@ -199,7 +214,12 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
 
         // start analysis
         final long start = System.currentTimeMillis();
-        new JAXRSAnalyzer(projectPaths, sourcePaths, classPaths, project.getName(), project.getVersion(), backend, fileLocation).analyze();
+        JAXRSAnalyzer jaxrsAnalyzer = new JAXRSAnalyzer( projectPaths, sourcePaths, classPaths, project.getName(),
+                project.getVersion(), backend, fileLocation );
+        HashSet<String> ignoredBoundaryClassNames = new HashSet<>( Arrays.asList( ignoredBoundaryClasses ) );
+        ignoredBoundaryClassNames.forEach( n -> LogProvider.info( String.format( "Boundary class %s will be ignored.", n ) ) );
+        jaxrsAnalyzer.setIgnoredBoundaryClasses( ignoredBoundaryClassNames );
+        jaxrsAnalyzer.analyze();
         LogProvider.debug("Analysis took " + (System.currentTimeMillis() - start) + " ms");
     }
 
@@ -214,6 +234,8 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
                 return BackendType.PLAINTEXT;
             case "asciidoc":
                 return BackendType.ASCIIDOC;
+            case "markdown":
+                return BackendType.MARKDOWN;
             case "swagger":
                 return BackendType.SWAGGER;
             default:
