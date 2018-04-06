@@ -54,7 +54,8 @@ import static java.util.stream.Collectors.joining;
 public class JAXRSAnalyzerMojo extends AbstractMojo {
 
     /**
-     * The chosen backend format. Defaults to plaintext.
+     * The chosen backend(s) format. Defaults to plaintext.
+     * Support multiple backends as comma separated list (e.g. <code>asciidoc,swagger</code>)
      *
      * @parameter default-value="plaintext" property="jaxrs-analyzer.backend"
      */
@@ -171,36 +172,39 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
             return;
         }
 
-        final BackendType backendType = getBackendType();
-        final Backend backend = configureBackend(backendType);
+        final List<BackendType> backendTypes = getBackendTypes();
+        LogProvider.info("analyzing JAX-RS resources, using " + backendTypes + " (from backend => " + backend + ")");
+        for (BackendType backendType : backendTypes) {
+          final Backend backend = configureBackend(backendType);
 
-        LogProvider.info("analyzing JAX-RS resources, using " + backend.getName() + " backend");
+          LogProvider.info("analyzing JAX-RS resources, using " + backend.getName() + " backends");
 
-        // add dependencies to analysis class path
-        final Set<Path> classPaths = getDependencies();
-        LogProvider.debug("Dependency class paths are: " + classPaths);
+          // add dependencies to analysis class path
+          final Set<Path> classPaths = getDependencies();
+          LogProvider.debug("Dependency class paths are: " + classPaths);
 
-        final Set<Path> projectPaths = singleton(outputDirectory.toPath());
-        LogProvider.debug("Project paths are: " + projectPaths);
+          final Set<Path> projectPaths = singleton(outputDirectory.toPath());
+          LogProvider.debug("Project paths are: " + projectPaths);
 
-        final Set<Path> sourcePaths = singleton(sourceDirectory.toPath());
-        LogProvider.debug("Source paths are: " + sourcePaths);
+          final Set<Path> sourcePaths = singleton(sourceDirectory.toPath());
+          LogProvider.debug("Source paths are: " + sourcePaths);
 
-        handleSourceEncoding();
+          handleSourceEncoding();
 
-        // create target sub-directory
-        final File resourcesDirectory = Paths.get(buildDirectory.getPath(), resourcesDir).toFile();
-        if (!resourcesDirectory.exists() && !resourcesDirectory.mkdirs())
-            throw new MojoExecutionException("Could not create directory " + resourcesDirectory);
+          // create target sub-directory
+          final File resourcesDirectory = Paths.get(buildDirectory.getPath(), resourcesDir).toFile();
+          if (!resourcesDirectory.exists() && !resourcesDirectory.mkdirs())
+              throw new MojoExecutionException("Could not create directory " + resourcesDirectory);
 
-        final Path fileLocation = resourcesDirectory.toPath().resolve(backendType.getFileLocation());
+          final Path fileLocation = resourcesDirectory.toPath().resolve(backendType.getFileLocation());
 
-        LogProvider.info("Generating resources at " + fileLocation.toAbsolutePath());
+          LogProvider.info("Generating resources at " + fileLocation.toAbsolutePath());
 
-        // start analysis
-        final long start = System.currentTimeMillis();
-        new JAXRSAnalyzer(projectPaths, sourcePaths, classPaths, project.getName(), project.getVersion(), backend, fileLocation).analyze();
-        LogProvider.debug("Analysis took " + (System.currentTimeMillis() - start) + " ms");
+          // start analysis
+          final long start = System.currentTimeMillis();
+          new JAXRSAnalyzer(projectPaths, sourcePaths, classPaths, project.getName(), project.getVersion(), backend, fileLocation).analyze();
+          LogProvider.debug("Analysis took " + (System.currentTimeMillis() - start) + " ms");
+        }
     }
 
     private void handleSourceEncoding() {
@@ -208,18 +212,9 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
             System.setProperty("project.build.sourceEncoding", encoding);
     }
 
-    private BackendType getBackendType() {
-        switch (backend.toLowerCase()) {
-            case "plaintext":
-                return BackendType.PLAINTEXT;
-            case "asciidoc":
-                return BackendType.ASCIIDOC;
-            case "swagger":
-                return BackendType.SWAGGER;
-            default:
-                throw new IllegalArgumentException("Backend " + backend + " not valid! Valid values are: " +
-                        Stream.of(BackendType.values()).map(Enum::name).map(String::toLowerCase).collect(joining(", ")));
-        }
+    private List<BackendType> getBackendTypes() {
+      String[] backends = backend.split(",");
+      return  Arrays.stream(backends).map(BackendType::fromString).collect(Collectors.toList());
     }
 
     private Backend configureBackend(final BackendType backendType) throws IllegalArgumentException {

@@ -17,6 +17,7 @@ To enable the plugin, simply add these lines to your pom.xml in the `<plugins>` 
             </goals>
             <configuration>
                 <!-- Available backends are plaintext (default), swagger and asciidoc -->
+                <!-- Also supported is a comma separated list. E.g. `swagger,asciidoc` -->
                 <backend>plaintext</backend>
                 <!-- Domain of the deployed project, defaults to "" -->
                 <deployedDomain>example.com</deployedDomain>
@@ -41,6 +42,7 @@ After building your project, the documentation resides under 'target/jaxrs-analy
 === Backend
 The `backend` parameter specifies the output format of the analysis.
 The available formats are Plaintext, AsciiDoc and Swagger.
+Support multiple backends as comma separated list (e.g. `<backend>asciidoc,swagger</backend>`)
 
 For further use of the created formats see the https://github.com/sdaschner/jaxrs-analyzer/blob/master/Documentation.adoc[JAX-RS Analyzer documentation].
 
