@@ -3,7 +3,7 @@
 
     <groupId>com.sebastian-daschner</groupId>
     <artifactId>jaxrs-analyzer-maven-plugin</artifactId>
-    <version>0.16+inx-1-SNAPSHOT</version>
+    <version>0.17-SNAPSHOT</version>
     <name>JAX-RS Analyzer Maven Plugin</name>
     <packaging>maven-plugin</packaging>
 
