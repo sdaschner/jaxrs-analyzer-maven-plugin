@@ -161,6 +161,16 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
      */
     private String resourcesDir;
 
+
+    /**
+     * JAX-RS root resource classes that will be ignored by the analyzer.
+     * The fully-qualified class names of classes to be ignored as JAX-RS root resources, separated by comma.
+     * Please note that the classes still might be considered as sub-resources, included in other root resources.
+     *
+     * @parameter default-value="" property="jaxrs-analyzer.ignoredRootResources"
+     */
+    private String[] ignoredRootResources;
+
     @Override
     public void execute() throws MojoExecutionException {
         injectMavenLoggers();
@@ -171,20 +181,32 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
             return;
         }
 
-        final BackendType backendType = getBackendType();
-        final Backend backend = configureBackend(backendType);
+        final JAXRSAnalyzer.Analysis analysis = new JAXRSAnalyzer.Analysis();
+        analysis.setProjectName(project.getName());
+        analysis.setProjectVersion(project.getVersion());
+
+        final Backend backend = configureBackend(getBackendType());
+        analysis.setBackend(backend);
 
         LogProvider.info("analyzing JAX-RS resources, using " + backend.getName() + " backend");
 
         // add dependencies to analysis class path
         final Set<Path> classPaths = getDependencies();
+        classPaths.forEach(analysis::addClassPath);
         LogProvider.debug("Dependency class paths are: " + classPaths);
 
         final Set<Path> projectPaths = singleton(outputDirectory.toPath());
+        projectPaths.forEach(analysis::addProjectClassPath);
         LogProvider.debug("Project paths are: " + projectPaths);
 
         final Set<Path> sourcePaths = singleton(sourceDirectory.toPath());
+        sourcePaths.forEach(analysis::addProjectSourcePath);
         LogProvider.debug("Source paths are: " + sourcePaths);
+
+        Stream.of(ignoredRootResources).forEach(ignored -> {
+            LogProvider.info(String.format("Class %s will be ignored as root resource.", ignored));
+            analysis.addIgnoredResource(ignored);
+        });
 
         handleSourceEncoding();
 
@@ -193,13 +215,16 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
         if (!resourcesDirectory.exists() && !resourcesDirectory.mkdirs())
             throw new MojoExecutionException("Could not create directory " + resourcesDirectory);
 
-        final Path fileLocation = resourcesDirectory.toPath().resolve(backendType.getFileLocation());
+        final Path fileLocation = resourcesDirectory.toPath().resolve(getBackendType().getFileLocation());
+        analysis.setOutputLocation(fileLocation);
 
         LogProvider.info("Generating resources at " + fileLocation.toAbsolutePath());
 
         // start analysis
         final long start = System.currentTimeMillis();
-        new JAXRSAnalyzer(projectPaths, sourcePaths, classPaths, project.getName(), project.getVersion(), backend, fileLocation).analyze();
+
+        new JAXRSAnalyzer(analysis).analyze();
+
         LogProvider.debug("Analysis took " + (System.currentTimeMillis() - start) + " ms");
     }
 
@@ -214,6 +239,8 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
                 return BackendType.PLAINTEXT;
             case "asciidoc":
                 return BackendType.ASCIIDOC;
+            case "markdown":
+                return BackendType.MARKDOWN;
             case "swagger":
                 return BackendType.SWAGGER;
             default:
