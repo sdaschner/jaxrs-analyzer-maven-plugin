@@ -16,19 +16,11 @@
 
 package com.sebastian_daschner.jaxrs_analyzer.maven;
 
-import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
+import com.sebastian_daschner.jaxrs_analyzer.JAXRSAnalyzer;
+import com.sebastian_daschner.jaxrs_analyzer.LogProvider;
+import com.sebastian_daschner.jaxrs_analyzer.backend.Backend;
+import com.sebastian_daschner.jaxrs_analyzer.backend.StringBackend;
+import com.sebastian_daschner.jaxrs_analyzer.backend.swagger.SwaggerOptions;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -41,11 +33,12 @@ import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
 
-import com.sebastian_daschner.jaxrs_analyzer.JAXRSAnalyzer;
-import com.sebastian_daschner.jaxrs_analyzer.LogProvider;
-import com.sebastian_daschner.jaxrs_analyzer.backend.Backend;
-import com.sebastian_daschner.jaxrs_analyzer.backend.StringBackend;
-import com.sebastian_daschner.jaxrs_analyzer.backend.swagger.SwaggerOptions;
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.joining;
@@ -170,11 +163,13 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
 
 
     /**
-     * Boundary resource classes which should ignored by the analyzer. (full qualified class names, separated by comma)
+     * JAX-RS root resource classes that will be ignored by the analyzer.
+     * The fully-qualified class names of classes to be ignored as JAX-RS root resources, separated by comma.
+     * Please note that the classes still might be considered as sub-resources, included in other root resources.
      *
-     * @parameter default-value="" property="jaxrs-analyzer.ignoredBoundaryClasses"
+     * @parameter default-value="" property="jaxrs-analyzer.ignoredRootResources"
      */
-    private String[] ignoredBoundaryClasses;
+    private String[] ignoredRootResources;
 
     @Override
     public void execute() throws MojoExecutionException {
@@ -186,20 +181,32 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
             return;
         }
 
-        final BackendType backendType = getBackendType();
-        final Backend backend = configureBackend(backendType);
+        final JAXRSAnalyzer.Analysis analysis = new JAXRSAnalyzer.Analysis();
+        analysis.setProjectName(project.getName());
+        analysis.setProjectVersion(project.getVersion());
+
+        final Backend backend = configureBackend(getBackendType());
+        analysis.setBackend(backend);
 
         LogProvider.info("analyzing JAX-RS resources, using " + backend.getName() + " backend");
 
         // add dependencies to analysis class path
         final Set<Path> classPaths = getDependencies();
+        classPaths.forEach(analysis::addClassPath);
         LogProvider.debug("Dependency class paths are: " + classPaths);
 
         final Set<Path> projectPaths = singleton(outputDirectory.toPath());
+        projectPaths.forEach(analysis::addProjectClassPath);
         LogProvider.debug("Project paths are: " + projectPaths);
 
         final Set<Path> sourcePaths = singleton(sourceDirectory.toPath());
+        sourcePaths.forEach(analysis::addProjectSourcePath);
         LogProvider.debug("Source paths are: " + sourcePaths);
+
+        Stream.of(ignoredRootResources).forEach(ignored -> {
+            LogProvider.info(String.format("Class %s will be ignored as root resource.", ignored));
+            analysis.addIgnoredResource(ignored);
+        });
 
         handleSourceEncoding();
 
@@ -208,18 +215,16 @@ public class JAXRSAnalyzerMojo extends AbstractMojo {
         if (!resourcesDirectory.exists() && !resourcesDirectory.mkdirs())
             throw new MojoExecutionException("Could not create directory " + resourcesDirectory);
 
-        final Path fileLocation = resourcesDirectory.toPath().resolve(backendType.getFileLocation());
+        final Path fileLocation = resourcesDirectory.toPath().resolve(getBackendType().getFileLocation());
+        analysis.setOutputLocation(fileLocation);
 
         LogProvider.info("Generating resources at " + fileLocation.toAbsolutePath());
 
         // start analysis
         final long start = System.currentTimeMillis();
-        JAXRSAnalyzer jaxrsAnalyzer = new JAXRSAnalyzer( projectPaths, sourcePaths, classPaths, project.getName(),
-                project.getVersion(), backend, fileLocation );
-        HashSet<String> ignoredBoundaryClassNames = new HashSet<>( Arrays.asList( ignoredBoundaryClasses ) );
-        ignoredBoundaryClassNames.forEach( n -> LogProvider.info( String.format( "Boundary class %s will be ignored.", n ) ) );
-        jaxrsAnalyzer.setIgnoredBoundaryClasses( ignoredBoundaryClassNames );
-        jaxrsAnalyzer.analyze();
+
+        new JAXRSAnalyzer(analysis).analyze();
+
         LogProvider.debug("Analysis took " + (System.currentTimeMillis() - start) + " ms");
     }
 
