@@ -5,7 +5,7 @@ The JAX-RS Analyzer Maven plugin activates the https://github.com/sdaschner/jaxr
 
 To enable the plugin, simply add these lines to your pom.xml in the `<plugins>` section.
 
-----
+```xml
 <plugin>
     <groupId>com.sebastian-daschner</groupId>
     <artifactId>jaxrs-analyzer-maven-plugin</artifactId>
@@ -33,7 +33,7 @@ To enable the plugin, simply add these lines to your pom.xml in the `<plugins>` 
         </execution>
     </executions>
 </plugin>
-----
+```
 
 After building your project, the documentation resides under 'target/jaxrs-analyzer/'.
 
